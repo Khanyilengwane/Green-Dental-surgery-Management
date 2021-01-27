@@ -1,0 +1,75 @@
+﻿@model Green.Models.Prescription
+
+
+@using (Html.BeginForm())
+{
+    <div class="container">
+        <br />
+        <div class="row">
+            @Html.Hidden("id")
+            @Html.HiddenFor(x=>x.appointmentId)
+        
+            <div class="col-sm-4">
+                @*@if (ViewBag.VehicleModel != null)
+                {
+                    @Html.Partial("_VehicleDetails", (CarRentalApp.Models.RentalItems)ViewBag.VehicleModel)
+                }*@
+
+            </div>
+            <div class="col-md-8">
+                <h3>Personal Information</h3><br />
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.Patient.PatientID, htmlAttributes: new { @class = "control-label" })
+
+                        @Html.EditorFor(model => model.Patient.PatientID, new { htmlAttributes = new { @readonly="readonly",@class = "form-control", @style = "max-width:100%" } })
+                        @Html.ValidationMessageFor(model => model.Patient.PatientID, "", new { @class = "text-danger" })
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Patient.Name, htmlAttributes: new { @class = "control-label" })
+
+                            @Html.EditorFor(model => model.Patient.Name, new { htmlAttributes = new { @readonly = "readonly", @class = "form-control", @style = "max-width:100%" } })
+                            @Html.ValidationMessageFor(model => model.Patient.Name, "", new { @class = "text-danger" })
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Patient.Sex, htmlAttributes: new { @class = "control-label" })
+
+                            @Html.EditorFor(model => model.Patient.Sex, new { htmlAttributes = new { @readonly = "readonly", @class = "form-control", @style = "max-width:100%" } })
+                            @Html.ValidationMessageFor(model => model.Patient.Sex, "", new { @class = "text-danger" })
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Patient.BirthDate, htmlAttributes: new { @class = "control-label" })
+
+                            @Html.EditorFor(model => model.Patient.BirthDate, new { htmlAttributes = new { @readonly = "readonly", @class = "form-control", @style = "max-width:100%" } })
+                            @Html.ValidationMessageFor(model => model.Patient.BirthDate, "", new { @class = "text-danger" })
+
+                        </div>
+                    </div>
+                </div>
+                            
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+
+                            <input type="submit" class="btn btn-outline-dark" value="Submit Booking" />
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <br />
+    </div>
+}
+

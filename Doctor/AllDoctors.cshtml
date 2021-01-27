@@ -1,0 +1,68 @@
+﻿@model IEnumerable<Green.Models.DoctorModel>
+
+@{
+    ViewBag.Title = "AllDoctors";
+}
+<body background="~/Images/5iUZmd4.png">
+
+    <h2>AllDoctors</h2>
+
+
+    <link href="~/Content/Productlisting.css" rel="stylesheet" />
+    
+
+    <div class="container">
+        <div class="well well-sm">
+            <strong>Book Doctor</strong>
+
+        </div>
+        <div id="products" class="row list-group">
+            @foreach (var item in Model)
+            {
+
+                <div class="item  col-xs-4 col-lg-4">
+                    <div class="thumbnail">
+                        @if (item.Picture == null)
+                        {
+                            <img src="@Url.Content("~/images/user.jpg")" style="width: 150px; height: 150px" alt="" />
+                        }
+                        else
+                        {
+                            <img src="data:image/png;base64,@Convert.ToBase64String(item.Picture, 0, item.Picture.Length)" style="width: 150px; height: 150px" alt="" />
+                        }
+
+                        <div class="caption">
+                            <h4 class="group inner list-group-item-heading">
+                                <b> @Html.DisplayFor(expression: modelItem => item.Name)</b>
+                            </h4>
+                            <p class="group inner list-group-item-text">
+                                @Html.DisplayFor(expression: modelItem => item.Department)
+                            </p>
+                            <div class="row">
+                                <div class="col-xs-12 col-md-6">
+                                    <p class="lead">
+                                        @Html.DisplayFor(expression: modelItem => item.Sex)
+                                    </p>
+                                </div>
+                                <div class="col-xs-12 col-md-offset-4">
+
+                                    @if (item.DisableNewAppointments == true)
+                                    {
+                                        <a href="@Url.Action(actionName: "Create", controllerName: "Doctor", routeValues: new {id = item.DoctorID})" class="btn disabled btn-default"><i class="fa fa-shopping-cart disabled"></i> Unavailable</a>
+                                    }
+                                    else
+                                    {
+                                        <a href="@Url.Action(actionName: "Create", controllerName: "Appointment", routeValues: new {id = item.DoctorID})" class="btn btn-default"><i class="fa fa-shopping-cart"></i> Request Appointment</a>
+                                    }
+
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    </body>
