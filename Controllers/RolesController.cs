@@ -1,100 +1,230 @@
-﻿using Green.Controllers;
-using Green.Model;
-using Green.Models;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
+﻿using CleanApp2018.BusinessLogic;
+using GqihhaLamlaji.Models;
+using GqihhaLamlaji.Infrastructure;
+using GqihhaLamlaji.Model.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using GqihhaLamlaji.Model;
 
-namespace CarRentalApp.Controllers
+namespace FinalStockvelAppCleanApp2018.Controllers
 {
-    public class RolesController : AdminController
+    public class RolesController : Controller
     {
-        private ApplicationDbContext context = new ApplicationDbContext();
-        public ActionResult RolesIndex()
-        {
-            List<RolesViewModel> rolesViewModels = new List<RolesViewModel>();
-            foreach (var item in context.Roles.Where(m => m.Name != "Admin").ToList())
-            {
-                rolesViewModels.Add(new RolesViewModel()
-                {
-                    RoleId = item.Id,
-                    RoleName = item.Name
-                });
-            }
+        RolesBusiness rb = new RolesBusiness();
+        HospitalDbContext con = new HospitalDbContext();
 
-            return View(rolesViewModels);
+
+        // GET: Roles
+        public ActionResult Index()
+        {
+            return View(rb.AllRoles());
         }
 
-      //  [Route("add-role")]
+
+
+        [HttpGet]
         public ActionResult AddRole()
         {
             return View();
         }
 
-      //  [Route("add-role")]
-        [ValidateAntiForgeryToken]
         [HttpPost]
-        public ActionResult AddRole(string role)
+        public ActionResult AddRole(string name)
         {
-            var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
-            if (!string.IsNullOrEmpty(role))
+
+            if (name == "")
             {
-                roleManager.Create(new IdentityRole(role));
-                return RedirectToAction("RolesIndex");
+                ViewBag.Result = "Please enter Role Name.";
             }
-            return View();
-        }
 
-        [Route("edit-role")]
-        public ActionResult EditRole(string id)
-        {
-            var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
-            IdentityRole role = roleManager.FindById(id);
-            RolesViewModel roleFound = new RolesViewModel()
+            else
             {
-                RoleId = role.Id,
-                RoleName = role.Name
-            };
-            return View(roleFound);
-        }
+                bool found = rb.RoleExists(name);
 
-//[Route("edit-role")]
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public ActionResult EditRole(RolesViewModel role)
-        {
-            var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
-            if (role != null)
-            {
-                var updateRole = roleManager.FindById(role.RoleId);
-                updateRole.Name = role.RoleName;
-                roleManager.Update(updateRole);
-                return RedirectToAction("RolesIndex");
-            }
-            return View();
-        }
-
-        [HttpGet]
-        public JsonResult Delete(string id)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(id))
+                if (found == true)
                 {
-                    var roleManager = new RoleManager<IdentityRole>(new RoleStore<IdentityRole>(context));
-                    roleManager.Delete(roleManager.FindById(id));
+                    ViewBag.Result = "Role name " + name + " already exists.";
+                }
+
+                else
+                {
+                    rb.CreateRole(name);
+
+                    ViewBag.Result = "Role created successfully.";
+                    return Json(new { success = true, message = "Saved Successfully" }, JsonRequestBehavior.AllowGet);
                 }
             }
-            catch
+
+            return View();
+        }
+
+
+
+        [HttpGet]
+        public ActionResult UsersInRole()
+        {
+            ViewBag.Roles = new SelectList(con.appRoles, "Name", "Name");
+
+            try
+            {
+                ViewBag.Feed = Session["feedack"].ToString();
+            }
+
+            catch (Exception x)
             {
 
             }
-            return Json(new object[] { new object() }, JsonRequestBehavior.AllowGet);
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult UsersInRole(string Id)
+        {
+            ViewBag.Roles = new SelectList(con.appRoles, "Name", "Name");
+
+            List<UsersView> list = new List<UsersView>();
+
+            if (Id == "")
+            {
+                ViewBag.Result = "Please select a role.";
+                return View();
+            }
+
+            list = rb.UsersInRole(Id);
+
+
+            if (list.Count == 0)
+            {
+                ViewBag.Result = "No users in this role.";
+                return View();
+            }
+
+            ViewBag.Count = "[" + list.Count + "] Users found.";
+
+            Session["RoleId"] = Id;
+            Session["feedack"] = "";
+
+            return View(list);
+        }
+
+        public ActionResult UnassignUsersInRole(string userId)
+        {
+            string roleId = Session["RoleId"].ToString();
+
+            string feed = rb.UnassignFromRole(userId, roleId);
+
+            Session["feedack"] = feed;
+
+            return RedirectToAction("UsersInRole");
+        }
+
+
+
+        [HttpGet]
+        public ActionResult AddUserToRole()
+        {
+            ViewBag.Users = new SelectList(con.Users, "Id", "Email");
+            ViewBag.Roles = new SelectList(con.appRoles, "Name", "Name");
+
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult AddUserToRole(string Id, string Name)
+        {
+            ViewBag.Users = new SelectList(con.Users, "Id", "Email");
+            ViewBag.Roles = new SelectList(con.appRoles, "Name", "Name");
+
+            if (Id != "" && Name != null)
+            {
+                if (rb.IsUserInRole(Id, Name) == false)
+                {
+                    rb.AddUserToRole(Id, Name);
+                    ViewBag.Result = "User successfully assigned a role!";
+                }
+
+                else
+                {
+                    ViewBag.Result = "User is already in selected Role!";
+                }
+            }
+
+            else
+            {
+                ViewBag.Result = "Please select Username and Rolename!";
+            }
+
+            return View();
+        }
+
+
+
+        [HttpGet]
+        public ActionResult RolesForThisUser()
+        {
+            ViewBag.Users = new SelectList(con.Users, "Id", "Email");
+
+            try
+            {
+                ViewBag.Feed = Session["feed"].ToString();
+            }
+
+            catch (Exception c)
+            {
+
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult RolesForThisUser(string Id)
+        {
+            ViewBag.Users = new SelectList(con.Users, "Id", "Email");
+
+            Session["UserId"] = Id;
+
+            List<RolesView> roleslist = rb.RolesForThisUser(Id);
+
+            if (roleslist == null)
+            {
+                ViewBag.Result = "This User isn't assigned any Role!";
+                return View();
+            }
+
+            ViewBag.Count = "[" + roleslist.Count + "] Role(s) found!";
+
+            return View(roleslist);
+        }
+
+
+
+        public ActionResult RemoveFromRole(string id)
+        {
+            string userid = Session["UserId"].ToString();
+
+            string feed = "";
+
+            try
+            {
+                if (userid != null && id != null)
+                {
+                    feed = rb.UnassignFromRole(userid, id);
+                }
+            }
+
+            catch (Exception x)
+            {
+                ViewBag.Result = "Please select User.";
+            }
+
+            Session["feed"] = feed;
+
+
+            return RedirectToAction("RolesForThisUser");
         }
     }
 }
